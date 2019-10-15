@@ -1052,3 +1052,39 @@ def disable_plugin(name, runas=None):
     cmd = [_get_rabbitmq_plugin(), 'disable', name]
     ret = __salt__['cmd.run_all'](cmd, reset_system_locale=False, runas=runas, python_shell=False)
     return _format_response(ret, 'Disabled')
+
+def list_queues_all_vhost(runas=None):
+    '''
+    Returns queue details of all configured virtual hosts.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' rabbitmq.list_queues_all_vhost
+    '''
+    if runas is None and not salt.utils.platform.is_windows():
+        runas = salt.utils.user.get_user()
+    cmd = 'for i in $(LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8" rabbitmqctl list_vhosts -q); do echo -e "\nvhost: $i" && LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8" rabbitmqctl list_queues -q -p $i name; done'
+    cmd.extend(args)
+    res = __salt__['cmd.run_all'](cmd, reset_system_locale=False, runas=runas, python_shell=False)
+    _check_response(res)
+    return _output_to_dict(res['stdout'])
+
+def list_consumers_all_vhost(runas=None):
+    '''
+    Returns consumer details of all configured virtual hosts and queues.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' rabbitmq.list_consumers_all_vhost
+    '''
+    if runas is None and not salt.utils.platform.is_windows():
+        runas = salt.utils.user.get_user()
+    cmd = 'for i in $(LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8" rabbitmqctl list_vhosts -q); do echo -e "\nvhost: $i" && LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8" rabbitmqctl list_consumers -q -p $i; done'
+    cmd.extend(args)
+    res = __salt__['cmd.run_all'](cmd, reset_system_locale=False, runas=runas, python_shell=False)
+    _check_response(res)
+    return _output_to_dict(res['stdout'])
